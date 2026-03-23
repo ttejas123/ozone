@@ -4,6 +4,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button';
 import { CopyButton } from '../../components/ui/CopyButton';
 import { FileDown, AlertTriangle } from 'lucide-react';
+import { useToolStore } from '../../store/toolStore';
+import { ToolChainer } from '../../components/ToolChainer';
 import { Textarea } from '../../components/ui/Input';
 
 // Custom recursive viewer
@@ -53,8 +55,19 @@ const JsonViewer = ({ data, level = 0 }: { data: any, level?: number }) => {
 };
 
 export default function JsonFormatter() {
-  const [input, setInput] = useState('');
+  const currentInput = useToolStore(state => state.currentInput);
+  const setInputGlobal = useToolStore(state => state.setInput);
+  const setOutputGlobal = useToolStore(state => state.setOutput);
+
+  const [input, setInput] = useState(() => currentInput || '');
   const [debouncedInput, setDebouncedInput] = useState('');
+
+  // Consume global input once
+  useEffect(() => {
+    if (currentInput) {
+      setInputGlobal(null);
+    }
+  }, [currentInput, setInputGlobal]);
 
   // Debouncing heavy JSON parsing
   useEffect(() => {
@@ -69,6 +82,15 @@ export default function JsonFormatter() {
 
   const isValid = parsedJson && !(parsedJson instanceof Error);
   const formattedString = isValid ? JSON.stringify(parsedJson, null, 2) : '';
+
+  // Sync valid output to global store
+  useEffect(() => {
+    if (isValid && debouncedInput.trim()) {
+      setOutputGlobal(formattedString);
+    } else {
+      setOutputGlobal(null);
+    }
+  }, [formattedString, isValid, debouncedInput, setOutputGlobal]);
 
   const downloadJson = () => {
     if (!isValid) return;
@@ -127,6 +149,8 @@ export default function JsonFormatter() {
           </CardContent>
         </Card>
       </div>
+
+      <ToolChainer currentToolId="json-formatter" />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
+import { toolRegistry } from '@/tools/toolRegistry';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { useAppStore } from '../../store';
 import { Moon, Sun, Wrench } from 'lucide-react';
@@ -7,6 +8,25 @@ import { ToastContainer } from '../ui/Toast';
 
 export const AppLayout = () => {
   const { theme, toggleTheme } = useAppStore();
+  const location = useLocation();
+
+  useEffect(() => {
+    const currentPath = location.pathname.substring(1);
+    if (!currentPath) return; // ignore home
+    
+    // Check if path is a known tool
+    const matchedTool = toolRegistry.find(t => t.path === currentPath);
+    if (matchedTool) {
+      try {
+        const recentStr = localStorage.getItem('recentTools');
+        const recent = recentStr ? JSON.parse(recentStr) : [];
+        const newRecent = [matchedTool.id, ...recent.filter((id: string) => id !== matchedTool.id)].slice(0, 4);
+        localStorage.setItem('recentTools', JSON.stringify(newRecent));
+      } catch (e) {
+        // ignore storage errors
+      }
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     if (theme === 'dark') {

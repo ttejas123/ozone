@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SEOHelmet } from '../../components/SEOHelmet';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Textarea } from '../../components/ui/Input';
@@ -7,14 +7,38 @@ import { Table, BarChart2, Upload, Loader2, Play, RefreshCcw } from 'lucide-reac
 import { parseData } from './utils';
 import { DataTable } from './components/DataTable';
 import { DataCharts } from './components/DataCharts';
+import { useToolStore } from '../../store/toolStore';
+import { ToolChainer } from '../../components/ToolChainer';
 
 export default function DataVisualizer() {
-  const [input, setInput] = useState('');
+  const currentInput = useToolStore(state => state.currentInput);
+  const setInputGlobal = useToolStore(state => state.setInput);
+  const setOutputGlobal = useToolStore(state => state.setOutput);
+
+  const [input, setInput] = useState(() => currentInput || '');
   const [data, setData] = useState<any[]>([]);
   const [columns, setColumns] = useState<string[]>([]);
   const [view, setView] = useState<'table' | 'chart'>('table');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Consume global input
+  useEffect(() => {
+    if (currentInput) {
+      setInputGlobal(null);
+      // Auto process if there's input
+      handleProcess();
+    }
+  }, [currentInput]);
+
+  // Sync valid output back to store
+  useEffect(() => {
+    if (data && data.length > 0) {
+      setOutputGlobal(JSON.stringify(data, null, 2));
+    } else {
+      setOutputGlobal(null);
+    }
+  }, [data, setOutputGlobal]);
 
   const handleProcess = async () => {
     if (!input.trim()) return;
@@ -190,6 +214,7 @@ export default function DataVisualizer() {
         </div>
       )}
 
+      <ToolChainer currentToolId="data-visualizer" />
     </div>
   );
 }

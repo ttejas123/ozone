@@ -6,13 +6,36 @@ import { Button } from '../../components/ui/Button';
 import { CopyButton } from '../../components/ui/CopyButton';
 import { ArrowLeftRight, DatabaseZap, Loader2, RefreshCcw } from 'lucide-react';
 import { compressData, decompressData, getByteSize, formatBytes } from './utils';
+import { useToolStore } from '../../store/toolStore';
+import { ToolChainer } from '../../components/ToolChainer';
+import { useEffect } from 'react';
 
 export default function CompressionTool() {
-  const [input, setInput] = useState('');
+  const currentInput = useToolStore(state => state.currentInput);
+  const setInputGlobal = useToolStore(state => state.setInput);
+  const setOutputGlobal = useToolStore(state => state.setOutput);
+
+  const [input, setInput] = useState(() => currentInput || '');
   const [output, setOutput] = useState('');
   const [mode, setMode] = useState<'compress' | 'decompress'>('compress');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Consume global input
+  useEffect(() => {
+    if (currentInput) {
+      setInputGlobal(null);
+    }
+  }, [currentInput, setInputGlobal]);
+
+  // Sync valid output back to store
+  useEffect(() => {
+    if (output) {
+      setOutputGlobal(output);
+    } else {
+      setOutputGlobal(null);
+    }
+  }, [output, setOutputGlobal]);
 
   const toggleMode = () => {
     setMode(m => m === 'compress' ? 'decompress' : 'compress');
@@ -164,6 +187,7 @@ export default function CompressionTool() {
         </Button>
       </div>
 
+      <ToolChainer currentToolId="compression-tool" />
     </div>
   );
 }
