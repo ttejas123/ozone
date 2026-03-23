@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import type { RegistryTool } from '@/tools/toolRegistry';
 import { toolRegistry } from '@/tools/toolRegistry';
+import { trackEvent } from '@/lib/analytics';
 
 interface ToolPageTemplateProps {
   tool: RegistryTool;
@@ -10,6 +11,13 @@ interface ToolPageTemplateProps {
 }
 
 export function ToolPageTemplate({ tool, children }: ToolPageTemplateProps) {
+  useEffect(() => {
+    trackEvent('tool_opened', {
+      tool: tool.id,
+      category: tool.category
+    });
+  }, [tool.id, tool.category]);
+
   // Find related tools (same category, excluding current)
   const relatedTools = toolRegistry
     .filter((t) => t.category === tool.category && t.id !== tool.id)

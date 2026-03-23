@@ -7,6 +7,7 @@ import { FileDown, AlertTriangle } from 'lucide-react';
 import { useToolStore } from '../../store/toolStore';
 import { ToolChainer } from '../../components/ToolChainer';
 import { Textarea } from '../../components/ui/Input';
+import { trackEvent } from '../../lib/analytics';
 
 // Custom recursive viewer
 const JsonViewer = ({ data, level = 0 }: { data: any, level?: number }) => {
@@ -87,6 +88,10 @@ export default function JsonFormatter() {
   useEffect(() => {
     if (isValid && debouncedInput.trim()) {
       setOutputGlobal(formattedString);
+      trackEvent("tool_used", {
+        tool: "json-formatter",
+        input_size: debouncedInput.length
+      });
     } else {
       setOutputGlobal(null);
     }
@@ -115,7 +120,7 @@ export default function JsonFormatter() {
         <Card className="flex flex-col h-full rounded-2xl overflow-hidden border">
           <CardHeader className="py-3 px-4 border-b">
             <CardTitle className="text-sm font-semibold">Input JSON</CardTitle>
-            <Button size="sm" variant="ghost" onClick={() => setInput('')}>Clear</Button>
+            <Button size="sm" variant="ghost" onClick={() => { setInput(''); trackEvent('clear_clicked', { tool: 'json-formatter' }); }}>Clear</Button>
           </CardHeader>
           <Textarea
             value={input}
@@ -130,8 +135,8 @@ export default function JsonFormatter() {
           <CardHeader className="py-3 px-4 border-b flex justify-between">
             <CardTitle className="text-sm font-semibold">Formatted Output</CardTitle>
             <div className="flex gap-2">
-              <Button size="sm" variant="ghost" onClick={downloadJson} disabled={!isValid}><FileDown className="w-4 h-4 mr-2"/> Download</Button>
-              <CopyButton size="sm" value={formattedString} />
+              <Button size="sm" variant="ghost" onClick={() => { downloadJson(); trackEvent('download_clicked', { tool: 'json-formatter' }); }} disabled={!isValid}><FileDown className="w-4 h-4 mr-2"/> Download</Button>
+              <CopyButton size="sm" value={formattedString} onClick={() => trackEvent('copy_clicked', { tool: 'json-formatter' })} />
             </div>
           </CardHeader>
           <CardContent className="flex-1 p-0 overflow-auto bg-white dark:bg-[#1e1e1e]">

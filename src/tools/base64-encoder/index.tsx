@@ -5,6 +5,7 @@ import { Textarea } from '../../components/ui/Input';
 import { CopyButton } from '../../components/ui/CopyButton';
 import { Button } from '../../components/ui/Button';
 import { ArrowLeftRight } from 'lucide-react';
+import { trackEvent } from '../../lib/analytics';
 
 export default function Base64Encoder() {
   const [input, setInput] = useState('');
@@ -21,9 +22,13 @@ export default function Base64Encoder() {
       try {
         if (mode === 'encode') {
           // encodeURIComponent handles unicode properly before btoa
-          setOutput(btoa(unescape(encodeURIComponent(input))));
+          const result = btoa(unescape(encodeURIComponent(input)));
+          setOutput(result);
+          trackEvent('tool_used', { tool: 'base64-encoder', mode: 'encode' });
         } else {
-          setOutput(decodeURIComponent(escape(atob(input))));
+          const result = decodeURIComponent(escape(atob(input)));
+          setOutput(result);
+          trackEvent('tool_used', { tool: 'base64-encoder', mode: 'decode' });
         }
       } catch (e) {
         setOutput('Error: Invalid input for chosen mode.');
@@ -55,7 +60,7 @@ export default function Base64Encoder() {
         <Card>
           <CardHeader>
             <CardTitle>Input ({mode === 'encode' ? 'Text' : 'Base64'})</CardTitle>
-            <Button size="sm" variant="ghost" onClick={() => setInput('')}>Clear</Button>
+            <Button size="sm" variant="ghost" onClick={() => { setInput(''); trackEvent('clear_clicked', { tool: 'base64-encoder' }); }}>Clear</Button>
           </CardHeader>
           <CardContent>
             <Textarea
@@ -70,7 +75,7 @@ export default function Base64Encoder() {
         <Card>
           <CardHeader>
             <CardTitle>Output ({mode === 'encode' ? 'Base64' : 'Text'})</CardTitle>
-            <CopyButton value={output} />
+            <CopyButton value={output} onClick={() => trackEvent('copy_clicked', { tool: 'base64-encoder' })} />
           </CardHeader>
           <CardContent>
             <Textarea

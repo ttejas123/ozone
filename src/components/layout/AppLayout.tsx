@@ -1,16 +1,25 @@
 import { useEffect } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, Link } from 'react-router-dom';
 import { toolRegistry } from '@/tools/toolRegistry';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { useAppStore } from '../../store';
 import { Moon, Sun, Wrench } from 'lucide-react';
 import { ToastContainer } from '../ui/Toast';
+import { trackPageView } from '@/lib/analytics';
+import { CookieConsent } from '../ui/CookieConsent';
+import { AdBanner } from '../AdBanner';
 
 export const AppLayout = () => {
   const { theme, toggleTheme } = useAppStore();
   const location = useLocation();
 
+  // Track page views on route changes
   useEffect(() => {
+    const consent = localStorage.getItem('cookie_consent');
+    if (consent === 'granted') {
+      trackPageView(location.pathname);
+    }
+
     const currentPath = location.pathname.substring(1);
     if (!currentPath) return; // ignore home
     
@@ -37,7 +46,7 @@ export const AppLayout = () => {
   }, [theme]);
 
   return (
-    <div className="min-h-screen flex flex-col transition-colors duration-200">
+    <div className="min-h-screen flex flex-col transition-colors duration-200 relative pb-16">
       {/* Navbar implementation built-in for simplicity */}
       <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -58,18 +67,26 @@ export const AppLayout = () => {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1 container mx-auto px-4 py-8 flex flex-col">
+        <AdBanner />
         <ErrorBoundary>
           <Outlet />
         </ErrorBoundary>
       </main>
 
       <footer className="border-t border-gray-200 dark:border-gray-800 py-6 mt-auto">
-        <div className="container mx-auto px-4 text-center text-gray-500 dark:text-gray-400 text-sm">
-          Built for Developers. Fast & Secure. {new Date().getFullYear()}
+        <div className="container mx-auto px-4 flex flex-col items-center gap-4 text-sm">
+          <div className="flex items-center gap-6 text-gray-500 dark:text-gray-400">
+            <Link to="/privacy-policy" className="hover:text-brand-600 dark:hover:text-brand-400 transition">Privacy Policy</Link>
+            <Link to="/contact" className="hover:text-brand-600 dark:hover:text-brand-400 transition">Contact Us</Link>
+          </div>
+          <div className="text-gray-500 dark:text-gray-400">
+            Built for Developers. Fast & Secure. {new Date().getFullYear()}
+          </div>
         </div>
       </footer>
       <ToastContainer />
+      <CookieConsent />
     </div>
   );
 };

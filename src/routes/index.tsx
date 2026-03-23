@@ -2,6 +2,8 @@ import { Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Home } from '@/pages/Home';
+import { PrivacyPolicy } from '@/pages/PrivacyPolicy';
+import { Contact } from '@/pages/Contact';
 import { toolRegistry } from '@/tools/toolRegistry';
 import { ToolPageTemplate } from '@/components/tools/ToolPageTemplate';
 
@@ -35,6 +37,14 @@ export const router = createBrowserRouter([
           </ToolPageTemplate>
         ),
       })),
+      {
+        path: 'privacy-policy',
+        element: <PrivacyPolicy />,
+      },
+      {
+        path: 'contact',
+        element: <Contact />,
+      },
       {
         path: '*',
         element: <Navigate to="/" replace />,
