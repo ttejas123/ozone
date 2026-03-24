@@ -23,13 +23,22 @@ export type PipelineNodeData = {
   status: 'idle' | 'running' | 'success' | 'error';
   input?: string;
   output?: any;
+  config?: Record<string, any>; // per-node config (e.g. compression algorithm)
 };
 
 export type PipelineNode = Node<PipelineNodeData>;
 
+export type SavedPipeline = {
+  name: string;
+  nodes: PipelineNode[];
+  edges: Edge[];
+  savedAt: number;
+};
+
 export interface PipelineState {
   nodes: PipelineNode[];
   edges: Edge[];
+  savedPipelines: Record<string, SavedPipeline>;
   onNodesChange: OnNodesChange;
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
@@ -38,6 +47,9 @@ export interface PipelineState {
   runPipeline: () => Promise<void>;
   clearPipeline: () => void;
   deleteNode: (nodeId: string) => void;
+  savePipeline: (name: string) => void;
+  loadPipeline: (name: string) => void;
+  deleteSavedPipeline: (name: string) => void;
 }
 
 export const usePipelineStore = create<PipelineState>()(
@@ -45,6 +57,7 @@ export const usePipelineStore = create<PipelineState>()(
     (set, get) => ({
       nodes: [],
       edges: [],
+      savedPipelines: {},
       onNodesChange: (changes: NodeChange[]) => {
         set({
           nodes: applyNodeChanges(changes, get().nodes) as PipelineNode[],
@@ -57,7 +70,10 @@ export const usePipelineStore = create<PipelineState>()(
       },
       onConnect: (connection: Connection) => {
         set({
-          edges: addEdge(connection, get().edges),
+          edges: addEdge(
+            { ...connection, animated: true, style: { stroke: '#6366f1', strokeWidth: 2 } },
+            get().edges
+          ),
         });
       },
       addNode: (tool: RegistryTool, position: { x: number; y: number }) => {
@@ -68,6 +84,7 @@ export const usePipelineStore = create<PipelineState>()(
           data: {
             tool,
             status: 'idle',
+            config: {},
           },
         };
         set({ nodes: [...get().nodes, newNode] });
@@ -92,6 +109,28 @@ export const usePipelineStore = create<PipelineState>()(
       },
       clearPipeline: () => {
         set({ nodes: [], edges: [] });
+      },
+      savePipeline: (name: string) => {
+        const { nodes, edges, savedPipelines } = get();
+        const saved: SavedPipeline = {
+          name,
+          nodes: nodes.map(n => ({ ...n, data: { ...n.data, status: 'idle', output: undefined } })),
+          edges,
+          savedAt: Date.now(),
+        };
+        set({ savedPipelines: { ...savedPipelines, [name]: saved } });
+      },
+      loadPipeline: (name: string) => {
+        const { savedPipelines } = get();
+        const pipeline = savedPipelines[name];
+        if (!pipeline) return;
+        set({ nodes: pipeline.nodes, edges: pipeline.edges });
+      },
+      deleteSavedPipeline: (name: string) => {
+        const { savedPipelines } = get();
+        const next = { ...savedPipelines };
+        delete next[name];
+        set({ savedPipelines: next });
       },
       runPipeline: async () => {
         const { nodes, edges, updateNodeData } = get();
@@ -140,7 +179,11 @@ export const usePipelineStore = create<PipelineState>()(
           }
 
           try {
-            const output = await executeNode(node.data.tool.id, inputToProcess || '');
+            const output = await executeNode(
+              node.data.tool.id,
+              inputToProcess || '',
+              node.data.config || {}
+            );
             outputs.set(currId, output);
             updateNodeData(currId, { status: 'success', output });
 

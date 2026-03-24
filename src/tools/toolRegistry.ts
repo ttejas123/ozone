@@ -23,7 +23,10 @@ import {
   Wand2,
   Grid3x3,
   Shapes,
-  Sparkles
+  Sparkles,
+  Archive,
+  LinkIcon,
+  Unlink
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -436,5 +439,45 @@ export const toolRegistry: RegistryTool[] = [
     icon: Sparkles,
     type: 'heavy',
     component: lazy(() => import('./live-particles')),
+  },
+  // ── Pipeline-only Nodes ─────────────────────────────────────────────────────
+  {
+    id: 'tinyurl-shorten',
+    name: 'TinyURL Shorten',
+    description: 'Shorten one or more URLs using the TinyURL API. Pass newline-separated URLs as input.',
+    path: 'pipeline-builder',
+    category: 'Network',
+    tags: ['url', 'shorten', 'tinyurl', 'pipeline'],
+    inputType: ['url', 'text'],
+    outputType: ['url'],
+    icon: LinkIcon,
+    type: 'heavy',
+    component: lazy(() => import('../features/pipeline')),
+  },
+  {
+    id: 'tinyurl-expand',
+    name: 'TinyURL Expand',
+    description: 'Resolve short URLs back to their original form. Works like a cURL HEAD request.',
+    path: 'pipeline-builder',
+    category: 'Network',
+    tags: ['url', 'expand', 'resolve', 'curl', 'pipeline'],
+    inputType: ['url', 'text'],
+    outputType: ['url'],
+    icon: Unlink,
+    type: 'heavy',
+    component: lazy(() => import('../features/pipeline')),
+  },
+  {
+    id: 'download-zip',
+    name: 'Download ZIP',
+    description: 'Bundle pipeline output into a compressed ZIP file. Supports Deflate (zlib) or no compression.',
+    path: 'pipeline-builder',
+    category: 'Data',
+    tags: ['zip', 'compress', 'download', 'deflate', 'pipeline'],
+    inputType: ['any'],
+    outputType: ['any'],
+    icon: Archive,
+    type: 'heavy',
+    component: lazy(() => import('../features/pipeline')),
   },
 ];

@@ -22,9 +22,7 @@ export class FirebaseDatabase implements DatabaseService {
     if (this.db) return this.db;
 
     // Dynamic imports — Firebase only bundled when provider = 'firebase'
-    // @ts-expect-error — optional peer dependency
     const { initializeApp, getApps } = await import('firebase/app');
-    // @ts-expect-error — optional peer dependency
     const { getFirestore } = await import('firebase/firestore');
 
     const firebaseConfig = {
@@ -41,7 +39,6 @@ export class FirebaseDatabase implements DatabaseService {
 
   async createShortUrl(data: { originalUrl: string; shortUrl: string }): Promise<ShortLink> {
     const db = await this.getDb();
-    // @ts-expect-error — optional peer dependency
     const { doc, setDoc, collection } = await import('firebase/firestore');
 
     const code = Math.random().toString(36).substring(2, 8);
@@ -63,7 +60,6 @@ export class FirebaseDatabase implements DatabaseService {
 
   async getShortUrl(code: string): Promise<string | null> {
     const db = await this.getDb();
-    // @ts-expect-error — optional peer dependency
     const { doc, getDoc, collection } = await import('firebase/firestore');
     const snap = await getDoc(doc(collection(db, 'short_links'), code));
     if (!snap.exists()) return null;
@@ -72,7 +68,6 @@ export class FirebaseDatabase implements DatabaseService {
 
   async getHistory(): Promise<ShortLink[]> {
     const db = await this.getDb();
-    // @ts-expect-error — optional peer dependency
     const { collection, getDocs, query, orderBy } = await import('firebase/firestore');
     const q = query(collection(db, 'short_links'), orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
@@ -85,7 +80,6 @@ export class FirebaseDatabase implements DatabaseService {
 
   async clearHistory(): Promise<void> {
     const db = await this.getDb();
-    // @ts-expect-error — optional peer dependency
     const { collection, getDocs, deleteDoc, doc } = await import('firebase/firestore');
     const snapshot = await getDocs(collection(db, 'short_links'));
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
