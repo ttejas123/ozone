@@ -1,0 +1,94 @@
+/**
+ * Firebase Firestore Database Adapter
+ * ────────────────────────────────────
+ * Implements DatabaseService using Firebase Firestore.
+ * The Firebase SDK is loaded lazily so it is never bundled unless active.
+ *
+ * Required env vars:
+ *   VITE_FIREBASE_API_KEY
+ *   VITE_FIREBASE_AUTH_DOMAIN
+ *   VITE_FIREBASE_PROJECT_ID
+ *   VITE_FIREBASE_APP_ID
+ *
+ * Firestore collection: 'short_links'
+ */
+import type { DatabaseService, ShortLink } from './types';
+
+export class FirebaseDatabase implements DatabaseService {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private db: any = null;
+
+  private async getDb() {
+    if (this.db) return this.db;
+
+    // Dynamic imports — Firebase only bundled when provider = 'firebase'
+    // @ts-expect-error — optional peer dependency
+    const { initializeApp, getApps } = await import('firebase/app');
+    // @ts-expect-error — optional peer dependency
+    const { getFirestore } = await import('firebase/firestore');
+
+    const firebaseConfig = {
+      apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+      appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    };
+
+    const app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
+    this.db = getFirestore(app);
+    return this.db;
+  }
+
+  async createShortUrl(data: { originalUrl: string; shortUrl: string }): Promise<ShortLink> {
+    const db = await this.getDb();
+    // @ts-expect-error — optional peer dependency
+    const { doc, setDoc, collection } = await import('firebase/firestore');
+
+    const code = Math.random().toString(36).substring(2, 8);
+    const link: ShortLink = {
+      id: code,
+      originalUrl: data.originalUrl,
+      shortUrl: data.shortUrl || `${window.location.origin}/t/${code}`,
+      createdAt: Date.now(),
+    };
+
+    await setDoc(doc(collection(db, 'short_links'), code), {
+      originalUrl: link.originalUrl,
+      shortUrl: link.shortUrl,
+      createdAt: link.createdAt,
+    });
+
+    return link;
+  }
+
+  async getShortUrl(code: string): Promise<string | null> {
+    const db = await this.getDb();
+    // @ts-expect-error — optional peer dependency
+    const { doc, getDoc, collection } = await import('firebase/firestore');
+    const snap = await getDoc(doc(collection(db, 'short_links'), code));
+    if (!snap.exists()) return null;
+    return (snap.data() as { originalUrl: string }).originalUrl;
+  }
+
+  async getHistory(): Promise<ShortLink[]> {
+    const db = await this.getDb();
+    // @ts-expect-error — optional peer dependency
+    const { collection, getDocs, query, orderBy } = await import('firebase/firestore');
+    const q = query(collection(db, 'short_links'), orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return snapshot.docs.map((d: any) => ({
+      id: d.id,
+      ...(d.data() as Omit<ShortLink, 'id'>),
+    }));
+  }
+
+  async clearHistory(): Promise<void> {
+    const db = await this.getDb();
+    // @ts-expect-error — optional peer dependency
+    const { collection, getDocs, deleteDoc, doc } = await import('firebase/firestore');
+    const snapshot = await getDocs(collection(db, 'short_links'));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await Promise.all(snapshot.docs.map((d: any) => deleteDoc(doc(db, 'short_links', d.id))));
+  }
+}

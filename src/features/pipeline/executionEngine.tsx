@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { QRCodeSVG } from 'qrcode.react';
-import { compressData } from '@/tools/compression-tool/utils';
+import { getCompute } from '@/services';
 
 export async function executeNode(toolId: string, input: any): Promise<any> {
   // Ensure we stringify input if needed
@@ -24,8 +24,9 @@ export async function executeNode(toolId: string, input: any): Promise<any> {
     }
     
     case 'compression-tool': {
-      // Input: any string (e.g. JSON stringified array of QRs)
-      const compressed = await compressData(inputStr);
+      // Now uses the compute service — respects VITE_COMPUTE_PROVIDER
+      const compute = await getCompute();
+      const compressed = await compute.compress(inputStr, 'deflate');
       return compressed; // Returns string
     }
 
@@ -42,3 +43,4 @@ export async function executeNode(toolId: string, input: any): Promise<any> {
     }
   }
 }
+

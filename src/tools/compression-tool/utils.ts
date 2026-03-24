@@ -1,37 +1,32 @@
-function bytesToBase64(bytes: Uint8Array): string {
-  let binary = '';
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
+/**
+ * Compression Tool — Service Layer Consumer
+ * ───────────────────────────────────────────
+ * compress/decompress logic now routes through the compute service.
+ * Switching VITE_COMPUTE_PROVIDER env var changes the backend without
+ * touching any component or UI code.
+ */
+import { getCompute } from '@/services';
+export type { CompressionAlgorithm } from '@/services';
 
-function base64ToBytes(base64: string): Uint8Array {
-  const binaryString = atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes;
-}
-
+/**
+ * Compress a string and return base64-encoded output.
+ * Previously: direct pako.deflate() — now: compute.compress()
+ */
 export const compressData = async (input: string): Promise<string> => {
-  const pako = await import('pako');
-  const textEncoder = new TextEncoder();
-  const inputBuffer = textEncoder.encode(input);
-  const compressed = pako.deflate(inputBuffer);
-  return bytesToBase64(compressed);
+  const compute = await getCompute();
+  return compute.compress(input, 'deflate');
 };
 
+/**
+ * Decompress a base64-encoded string back to the original.
+ * Previously: direct pako.inflate() — now: compute.decompress()
+ */
 export const decompressData = async (input: string): Promise<string> => {
-  const pako = await import('pako');
-  const bytes = base64ToBytes(input);
-  const decompressed = pako.inflate(bytes);
-  const textDecoder = new TextDecoder();
-  return textDecoder.decode(decompressed);
+  const compute = await getCompute();
+  return compute.decompress(input, 'deflate');
 };
+
+// ── Pure helpers (no service dependency) ─────────────────────────────────────
 
 export const getByteSize = (str: string): number => {
   if (!str) return 0;
@@ -45,3 +40,4 @@ export const formatBytes = (bytes: number): string => {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
+

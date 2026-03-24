@@ -1,35 +1,47 @@
-export interface ShortLink {
-  id: string;
-  originalUrl: string;
-  shortUrl: string;
-  createdAt: number;
-}
+/**
+ * TinyURL Generator — Service Layer Consumer
+ * ─────────────────────────────────────────────
+ * All persistence and redirect logic now goes through the service layer.
+ * Switching providers (localStorage → Supabase → Firebase) requires
+ * only changing VITE_DB_PROVIDER and VITE_REDIRECT_PROVIDER in .env.
+ */
+import { getDatabase, getRedirect } from '@/services';
+export type { ShortLink } from '@/services';
 
-export const generateShortLink = (originalUrl: string): ShortLink => {
-  const hash = Math.random().toString(36).substring(2, 8);
-  const baseUrl = window.location.origin;
-  const shortUrl = `${baseUrl}/t/${hash}`;
-  
-  return {
-    id: hash,
-    originalUrl,
-    shortUrl,
-    createdAt: Date.now(),
-  };
+/**
+ * Create a new short link and persist it via the database service.
+ * Previously: direct localStorage write — now: db.createShortUrl()
+ */
+export const generateShortLink = async (originalUrl: string) => {
+  const db = await getDatabase();
+  const redirect = await getRedirect();
+
+  const code = Math.random().toString(36).substring(2, 8);
+  const shortUrl = `${window.location.origin}/t/${code}`;
+
+  // Persist via database service (localStorage by default)
+  const link = await db.createShortUrl({ originalUrl, shortUrl });
+
+  // Register the redirect mapping
+  await redirect.register(code, originalUrl);
+
+  return link;
 };
 
-export const saveLinkToHistory = (link: ShortLink) => {
-  const historyStr = localStorage.getItem('tinyurl_history');
-  let history: ShortLink[] = historyStr ? JSON.parse(historyStr) : [];
-  history = [link, ...history];
-  localStorage.setItem('tinyurl_history', JSON.stringify(history));
+/**
+ * Get all previously created short links, newest first.
+ * Previously: JSON.parse(localStorage.getItem(...)) — now: db.getHistory()
+ */
+export const getHistory = async () => {
+  const db = await getDatabase();
+  return db.getHistory();
 };
 
-export const getHistory = (): ShortLink[] => {
-  const historyStr = localStorage.getItem('tinyurl_history');
-  return historyStr ? JSON.parse(historyStr) : [];
-};
-
-export const clearHistory = () => {
-  localStorage.removeItem('tinyurl_history');
+/**
+ * Clear all short link history.
+ * Previously: localStorage.removeItem(...) — now: db.clearHistory()
+ */
+export const clearHistory = async () => {
+  const db = await getDatabase();
+  await db.clearHistory();
 };

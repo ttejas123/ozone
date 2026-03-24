@@ -1,22 +1,24 @@
 import { useState, useEffect } from 'react';
-import { Link2, Trash2, ArrowRight } from 'lucide-react';
+import { Link2, Trash2, ArrowRight, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { SEOHelmet } from '@/components/SEOHelmet';
-import { generateShortLink, saveLinkToHistory, getHistory, clearHistory, type ShortLink } from './utils';
+import { generateShortLink, getHistory, clearHistory, type ShortLink } from './utils';
 
 export default function TinyUrlGenerator() {
   const [url, setUrl] = useState('');
   const [history, setHistory] = useState<ShortLink[]>([]);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    setHistory(getHistory());
+    // Load history via service layer on mount
+    getHistory().then(setHistory);
   }, []);
 
-  const handleShorten = () => {
+  const handleShorten = async () => {
     if (!url.trim()) {
       setError('Please enter a valid URL');
       return;
@@ -30,14 +32,22 @@ export default function TinyUrlGenerator() {
       return;
     }
 
-    const newLink = generateShortLink(url);
-    saveLinkToHistory(newLink);
-    setHistory(getHistory());
-    setUrl('');
+    setIsLoading(true);
+    try {
+      await generateShortLink(url);
+      // Refresh history from the service
+      const updated = await getHistory();
+      setHistory(updated);
+      setUrl('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate short link');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleClear = () => {
-    clearHistory();
+  const handleClear = async () => {
+    await clearHistory();
     setHistory([]);
   };
 
@@ -67,17 +77,18 @@ export default function TinyUrlGenerator() {
               placeholder="https://example.com/very/long/url/that/needs/shortening"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleShorten()}
               className={`w-full text-lg py-6 ${error ? 'border-red-500 focus:ring-red-500' : ''}`}
             />
             {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
           </div>
           <Button 
             onClick={handleShorten} 
-            size="lg" 
-            className="w-full md:w-auto mt-1 md:mt-0 py-6 px-8 bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-500/20"
+            size="lg"
+            disabled={isLoading}
+            className="w-full md:w-auto mt-1 md:mt-0 py-6 px-8 bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-500/20 gap-2"
           >
-            Shorten 
-            <ArrowRight className="w-5 h-5 ml-2" />
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Shorten <ArrowRight className="w-5 h-5" /></>}
           </Button>
         </div>
       </Card>
@@ -127,3 +138,4 @@ export default function TinyUrlGenerator() {
     </div>
   );
 }
+
