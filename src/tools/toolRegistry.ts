@@ -26,7 +26,8 @@ import {
   Sparkles,
   Archive,
   LinkIcon,
-  Unlink
+  Unlink,
+  Eraser
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -439,6 +440,19 @@ export const toolRegistry: RegistryTool[] = [
     icon: Sparkles,
     type: 'heavy',
     component: lazy(() => import('./live-particles')),
+  },
+  {
+    id: 'remove-background',
+    name: 'Remove Background',
+    description: 'Remove image backgrounds by selecting a color. Click on background and adjust sensitivity for precise results.',
+    path: 'remove-background',
+    category: 'Creative',
+    tags: ['background', 'remove', 'transparency', 'image', 'editing'],
+    inputType: ['image'],
+    outputType: ['image'],
+    icon: Eraser,
+    type: 'heavy',
+    component: lazy(() => import('./remove-background')),
   },
   // ── Pipeline-only Nodes ─────────────────────────────────────────────────────
   {
