@@ -15,6 +15,7 @@ import {
 import { Card } from './Card';
 import { Button } from './Button';
 import { Modal } from './Modal';
+import { toast } from '../../store/toastStore';
 
 
 interface OutputConsoleProps {
@@ -41,11 +42,16 @@ export const OutputConsole = ({
   const [copied, setCopied] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     if (!output) return;
-    navigator.clipboard.writeText(output);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(output);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+      toast.error('Failed to copy');
+    }
   };
 
   const handleExport = () => {

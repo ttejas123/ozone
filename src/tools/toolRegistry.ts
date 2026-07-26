@@ -53,6 +53,10 @@ export interface RegistryTool {
   faqIcon?: LucideIcon;
   longDescription?: string;
   fullScreen?: boolean;
+  // Whether this tool actually reads useToolStore's currentInput hand-off on
+  // mount (see ToolChainer). Most tools match inputType/outputType but don't
+  // wire up the hand-off, so leaving this unset keeps them out of "Use Output In...".
+  acceptsHandoff?: boolean;
 }
 
 export const toolRegistry: RegistryTool[] = [
@@ -97,6 +101,7 @@ export const toolRegistry: RegistryTool[] = [
     tags: ['json', 'format', 'dev', 'data', 'pretty print', 'validator', 'minify', 'beautify'],
     inputType: ['json', 'text'],
     outputType: ['json', 'text'],
+    acceptsHandoff: true,
     icon: FileJson,
     type: 'light',
     component: lazy(() => import('./json-formatter')),
@@ -419,6 +424,7 @@ export const toolRegistry: RegistryTool[] = [
     tags: ['compress', 'gzip', 'data', 'payload', 'size reduction'],
     inputType: ['text', 'json'],
     outputType: ['text', 'json'],
+    acceptsHandoff: true,
     icon: Minimize2,
     type: 'heavy',
     component: lazy(() => import('./compression-tool')),
@@ -438,6 +444,7 @@ export const toolRegistry: RegistryTool[] = [
     tags: ['data', 'chart', 'visualize', 'json', 'csv', 'graph', 'dashboard'],
     inputType: ['json', 'csv'],
     outputType: ['image'],
+    acceptsHandoff: true,
     icon: BarChart2,
     type: 'heavy',
     component: lazy(() => import('./data-visualizer')),

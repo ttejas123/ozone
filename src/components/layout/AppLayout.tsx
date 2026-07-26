@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toolRegistry } from '@/tools/toolRegistry';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { useAppStore } from '../../store';
+import { useToolStore } from '@/store/toolStore';
 import { 
   Moon, 
   Sun, 
@@ -55,10 +56,10 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const handleSearch = (e?: React.FormEvent) => {
     e?.preventDefault();
     const term = navSearch.trim();
-    const url = term 
-      ? `/?search=${encodeURIComponent(term)}#browse` 
+    const url = term
+      ? `/?search=${encodeURIComponent(term)}#browse`
       : `/#browse`;
-    
+
     setShowSearchDropdown(false);
     setNavSearch('');
     window.location.href = url;
@@ -86,6 +87,10 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   };
 
   const metrics = useMemo(() => getCachedMetrics(), []);
+
+  useEffect(() => {
+    useToolStore.persist.rehydrate();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -173,7 +178,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
                   Free<span className="text-gradient">Tool</span>
                 </span>
               </a>
-              
+
               <nav className="hidden lg:flex items-center gap-10 text-[14px] font-bold">
                 <a href="/" className="text-gray-900 dark:text-white hover:text-brand-500 transition-colors">
                   Tools
@@ -197,7 +202,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
                         { name: 'Tech News', desc: 'Daily developer digests', icon: Newspaper, path: '/tech-news' },
                         { name: 'Product Scope', desc: 'Roadmap & upcoming', icon: Zap, path: '/#upcoming' },
                       ].map((item) => (
-                        <a 
+                        <a
                           key={item.name}
                           href={item.path}
                           className="flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-white/5 transition-all group/item"
@@ -219,7 +224,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
                   <Info className="w-4 h-4" />
                   About
                 </a>
-                
+
                 <a href="/contact" className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-brand-500 transition-colors">
                   <Mail className="w-4 h-4" />
                   Support
@@ -347,8 +352,8 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
                   {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                 </button>
                 
-                <a 
-                  href="/contact" 
+                <a
+                  href="/contact"
                   className="hidden sm:flex items-center gap-2 px-5 py-2 bg-gray-900 dark:bg-white text-white dark:text-black rounded-full text-sm font-semibold hover:opacity-90 transition-all shadow-md active:scale-95"
                 >
                   <Plus className="w-4 h-4" />

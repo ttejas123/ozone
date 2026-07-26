@@ -1,6 +1,5 @@
 'use client';
 
-
 import { useToolStore } from '@/store/toolStore';
 import { toolRegistry } from '@/tools/toolRegistry';
 
@@ -20,9 +19,13 @@ export const ToolChainer = ({ currentToolId }: ToolChainerProps) => {
 
   if (!currentTool) return null;
 
-  // Find compatible tools based on outputType -> inputType mapping
+  // Find compatible tools based on outputType -> inputType mapping. Only
+  // tools that actually consume the currentInput hand-off (acceptsHandoff)
+  // are offered here — otherwise "Use Output In..." would send data to a
+  // tool that silently ignores it.
   const compatibleTools = toolRegistry.filter((tool) => {
     if (tool.id === currentToolId) return false;
+    if (!tool.acceptsHandoff) return false;
     // Check intersection between current outputType and target inputType
     const hasMatchingType = tool.inputType.some(type => currentTool.outputType.includes(type));
     return hasMatchingType;

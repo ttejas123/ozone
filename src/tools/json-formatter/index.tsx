@@ -12,6 +12,7 @@ import { useToolStore } from '../../store/toolStore';
 import { ToolChainer } from '../../components/ToolChainer';
 import { Textarea } from '../../components/ui/Input';
 import { trackEvent } from '../../lib/analytics';
+import { toast } from '../../store/toastStore';
 import { Toggle } from '../../components/ui/Toggle';
 import { Search, X, CheckCircle, Code2, CornerDownRight, ChevronRight, ChevronDown, Check, Copy } from 'lucide-react';
 import { cn } from '../../components/ui/Button';
@@ -200,7 +201,9 @@ const ValueDisplay = ({
 
 export default function JsonFormatter() {
   const currentInput = useToolStore(state => state.currentInput);
+  const sourceToolId = useToolStore(state => state.sourceToolId);
   const setInputGlobal = useToolStore(state => state.setInput);
+  const setSourceToolGlobal = useToolStore(state => state.setSourceTool);
   const setOutputGlobal = useToolStore(state => state.setOutput);
 
   const [input, setInput] = useState(() => currentInput || '');
@@ -226,14 +229,15 @@ export default function JsonFormatter() {
     return () => observer.disconnect();
   }, [containerNode]);
 
-  // Consume global input once
-
-  // Consume global input once
+  // Consume global input once — only if this hand-off was addressed to us,
+  // so a hand-off meant for another tool doesn't get picked up here instead.
   useEffect(() => {
-    if (currentInput) {
+    if (currentInput && sourceToolId === 'json-formatter') {
+      setInput(currentInput);
       setInputGlobal(null);
+      setSourceToolGlobal(null);
     }
-  }, [currentInput, setInputGlobal]);
+  }, [currentInput, sourceToolId, setInputGlobal, setSourceToolGlobal]);
 
   // Debouncing heavy JSON parsing
   useEffect(() => {
@@ -352,8 +356,12 @@ export default function JsonFormatter() {
     trackEvent('collapse_all_clicked', { tool: 'json-formatter' });
   };
 
-  const copyPath = (path: string) => {
-    navigator.clipboard.writeText(path);
+  const copyPath = async (path: string) => {
+    try {
+      await navigator.clipboard.writeText(path);
+    } catch {
+      toast.error('Failed to copy path');
+    }
   };
 
   return (

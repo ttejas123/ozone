@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useFilePaste } from '@/hooks/useFilePaste';
 import { Upload, Download, Trash2, Eraser, Loader, Sparkles, Settings2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
@@ -33,6 +33,19 @@ export default function RemoveBackground() {
     setProgress(0);
     setProgressText('');
   }, []);
+
+  // Revoke the previous blob URL whenever it's replaced or the component unmounts.
+  useEffect(() => {
+    return () => {
+      if (imageUrl) URL.revokeObjectURL(imageUrl);
+    };
+  }, [imageUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (outputUrl) URL.revokeObjectURL(outputUrl);
+    };
+  }, [outputUrl]);
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

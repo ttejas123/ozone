@@ -183,6 +183,9 @@ export default function ImageFilter() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const workspaceRef = useRef<HTMLDivElement>(null);
   const renderCanvasRef = useRef<HTMLCanvasElement>(null);
+  // Layer content URLs stay valid for the whole session since undo/redo history
+  // can reference deleted layers; only revoke them when the tool unmounts.
+  const layerObjectUrlsRef = useRef<Set<string>>(new Set());
 
   const selectedLayer = layers.find(l => l.id === selectedLayerId);
 
@@ -210,6 +213,7 @@ export default function ImageFilter() {
 
   const handleFile = useCallback((file: File) => {
     const url = URL.createObjectURL(file);
+    layerObjectUrlsRef.current.add(url);
     const newLayer: Layer = {
       id: Math.random().toString(36).substr(2, 9),
       type: 'image',
@@ -308,6 +312,22 @@ export default function ImageFilter() {
     const timer = setTimeout(renderScene, 300);
     return () => clearTimeout(timer);
   }, [renderScene]);
+
+  // Each render replaces outputUrl with a fresh blob URL; revoke the previous
+  // one since nothing else (including undo history) references it.
+  useEffect(() => {
+    return () => {
+      if (outputUrl) URL.revokeObjectURL(outputUrl);
+    };
+  }, [outputUrl]);
+
+  useEffect(() => {
+    const urls = layerObjectUrlsRef.current;
+    return () => {
+      urls.forEach(url => URL.revokeObjectURL(url));
+      urls.clear();
+    };
+  }, []);
 
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState<string | null>(null); // 'nw', 'ne', 'sw', 'se'

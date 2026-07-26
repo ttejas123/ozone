@@ -1,0 +1,60 @@
+{
+  "pages": [
+    {
+      "width": 612,
+      "height": 792,
+      "rotation": 0,
+      "isScanned": false,
+      "textItems": [
+        {
+          "text": "Quarterly Report",
+          "x": 72,
+          "y": 100,
+          "width": 180,
+          "height": 24,
+          "fontFamily": "Helvetica",
+          "fontSize": 24,
+          "bold": true,
+          "italic": false,
+          "color": "#1a1a1a",
+          "rotation": 0
+        },
+        {
+          "text": "Revenue grew 12% quarter over quarter, driven primarily by",
+          "x": 72,
+          "y": 140,
+          "width": 420,
+          "height": 12,
+          "fontFamily": "Helvetica",
+          "fontSize": 11,
+          "bold": false,
+          "italic": false,
+          "color": "#333333",
+          "rotation": 0
+        },
+        {
+          "text": "the launch of the new subscription tier.",
+          "x": 72,
+          "y": 156,
+          "width": 230,
+          "height": 12,
+          "fontFamily": "Helvetica",
+          "fontSize": 11,
+          "bold": false,
+          "italic": false,
+          "color": "#333333",
+          "rotation": 0
+        }
+      ],
+      "images": [
+        {
+          "x": 72,
+          "y": 200,
+          "width": 300,
+          "height": 180,
+          "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+        }
+      ]
+    }
+  ]
+}

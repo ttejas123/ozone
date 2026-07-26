@@ -7,13 +7,13 @@ export function useCopyToClipboard(timeout = 2000) {
   const [isCopied, setIsCopied] = useState(false);
 
   const copyToClipboard = useCallback(
-    (text: string) => {
+    async (text: string) => {
       if (!navigator?.clipboard) {
         toast.error('Clipboard not supported');
         return false;
       }
       try {
-        navigator.clipboard.writeText(text);
+        await navigator.clipboard.writeText(text);
         setIsCopied(true);
         toast.success('Copied to clipboard!');
         setTimeout(() => setIsCopied(false), timeout);

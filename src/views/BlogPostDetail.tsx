@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { BlogPost } from '@/data/blogs';
 import { SEOHelmet } from '../components/SEOHelmet';
+import { toast } from '../store/toastStore';
 
 interface BlogPostDetailProps {
   post: BlogPost;
@@ -101,10 +102,14 @@ export const BlogPostDetail = ({ post }: BlogPostDetailProps) => {
             {/* Sidebar interactions */}
             <div className="hidden min-[1300px]:flex absolute -left-32 top-0 flex-col gap-6 h-full">
                  <div className="sticky top-32 flex flex-col gap-6">
-                   <button 
-                    onClick={() => {
-                      navigator.clipboard.writeText(window.location.href);
-                      // Add a toast notification here if available
+                   <button
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(window.location.href);
+                        toast.success('Link copied to clipboard!');
+                      } catch {
+                        toast.error('Failed to copy link');
+                      }
                     }}
                     className="group flex flex-col items-center gap-2 text-gray-400 hover:text-brand-500 transition-colors"
                    >

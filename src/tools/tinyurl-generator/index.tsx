@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { SEOHelmet } from '@/components/SEOHelmet';
+import { toast } from '@/store/toastStore';
 import { generateShortLink, getHistory, clearHistory, resolveShortLink, type ShortLink } from './utils';
 
 // ── Expand tab logic ──────────────────────────────────────────────────────────
@@ -44,10 +45,14 @@ function ExpandTab({ onPreview }: { onPreview: (url: string) => void }) {
     setLoading(false);
   };
 
-  const copyText = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(text);
-    setTimeout(() => setCopied(null), 1500);
+  const copyText = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(text);
+      setTimeout(() => setCopied(null), 1500);
+    } catch {
+      toast.error('Failed to copy');
+    }
   };
 
   return (

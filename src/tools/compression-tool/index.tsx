@@ -13,7 +13,9 @@ import { ToolChainer } from '../../components/ToolChainer';
 
 export default function CompressionTool() {
   const currentInput = useToolStore(state => state.currentInput);
+  const sourceToolId = useToolStore(state => state.sourceToolId);
   const setInputGlobal = useToolStore(state => state.setInput);
+  const setSourceToolGlobal = useToolStore(state => state.setSourceTool);
   const setOutputGlobal = useToolStore(state => state.setOutput);
 
   const [input, setInput] = useState(() => currentInput || '');
@@ -22,12 +24,15 @@ export default function CompressionTool() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Consume global input
+  // Consume global input — only if this hand-off was addressed to us, so a
+  // hand-off meant for another tool doesn't get picked up here instead.
   useEffect(() => {
-    if (currentInput) {
+    if (currentInput && sourceToolId === 'compression-tool') {
+      setInput(currentInput);
       setInputGlobal(null);
+      setSourceToolGlobal(null);
     }
-  }, [currentInput, setInputGlobal]);
+  }, [currentInput, sourceToolId, setInputGlobal, setSourceToolGlobal]);
 
   // Sync valid output back to store
   useEffect(() => {

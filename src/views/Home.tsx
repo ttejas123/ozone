@@ -188,11 +188,15 @@ const ToolCard = React.memo(({
                    <PinIcon className={`w-3.5 h-3.5 ${isPinned ? 'fill-current' : ''}`} />
                 </button>
                 <button
-                  onClick={(e) => {
+                  onClick={async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    navigator.clipboard.writeText(`${window.location.origin}/${tool.path}`);
-                    toast.success('Link copied to clipboard!');
+                    try {
+                      await navigator.clipboard.writeText(`${window.location.origin}/${tool.path}`);
+                      toast.success('Link copied to clipboard!');
+                    } catch {
+                      toast.error('Failed to copy link');
+                    }
                   }}
                   className="p-2 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-500 hover:text-brand-500 transition-colors"
                   aria-label={`Copy link for ${tool.name}`}
@@ -503,7 +507,7 @@ export const Home = () => {
                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                     {pinnedTools.map(tool => (
                       <div key={`pinned-${tool.id}`} className="relative group">
-                        <a 
+                        <a
                           href={`/${tool.path}`}
                           className="flex items-center gap-5 p-4 rounded-[1.5rem] bg-white dark:bg-[#0A0A0A] border border-gray-100 dark:border-white/5 hover:border-brand-500/50 transition-all shadow-sm hover:shadow-xl h-full"
                         >
@@ -541,7 +545,7 @@ export const Home = () => {
                  </div>
                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                     {recentTools.slice(0, 4).map(tool => (
-                      <a 
+                      <a
                         key={`recent-${tool.id}`}
                         href={`/${tool.path}`}
                         className="flex items-center gap-5 p-4 rounded-[1.5rem] bg-white dark:bg-[#0A0A0A] border border-gray-100 dark:border-white/5 hover:border-brand-500/50 transition-all shadow-sm hover:shadow-xl h-full"
@@ -761,7 +765,7 @@ export const Home = () => {
                <p className="text-white/50 dark:text-black/50 text-xl mb-14 font-medium leading-relaxed">
                  Our roadmap is driven by our community. Submit your request today and we'll aim to ship it in record time.
                </p>
-               <a 
+               <a
                  href="/contact"
                  className="inline-flex items-center gap-4 px-12 py-6 bg-brand-500 text-white rounded-2xl font-black text-2xl hover:scale-105 active:scale-95 transition-all shadow-2xl"
                >

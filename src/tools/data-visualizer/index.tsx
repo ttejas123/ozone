@@ -15,7 +15,9 @@ import { ToolChainer } from '../../components/ToolChainer';
 
 export default function DataVisualizer() {
   const currentInput = useToolStore(state => state.currentInput);
+  const sourceToolId = useToolStore(state => state.sourceToolId);
   const setInputGlobal = useToolStore(state => state.setInput);
+  const setSourceToolGlobal = useToolStore(state => state.setSourceTool);
   const setOutputGlobal = useToolStore(state => state.setOutput);
 
   const [input, setInput] = useState(() => currentInput || '');
@@ -60,14 +62,17 @@ export default function DataVisualizer() {
     }
   });
 
-  // Consume global input
+  // Consume global input — only if this hand-off was addressed to us, so a
+  // hand-off meant for another tool doesn't get picked up here instead.
   useEffect(() => {
-    if (currentInput) {
+    if (currentInput && sourceToolId === 'data-visualizer') {
+      setInput(currentInput);
       setInputGlobal(null);
+      setSourceToolGlobal(null);
       // Auto process if there's input
-      handleProcess();
+      handleProcess(currentInput);
     }
-  }, [currentInput]);
+  }, [currentInput, sourceToolId]);
 
   // Sync valid output back to store
   useEffect(() => {
@@ -78,12 +83,12 @@ export default function DataVisualizer() {
     }
   }, [data, setOutputGlobal]);
 
-  const handleProcess = async () => {
-    if (!input.trim()) return;
+  const handleProcess = async (value: string = input) => {
+    if (!value.trim()) return;
     setIsLoading(true);
     setError(null);
     try {
-      const result = await parseData(input);
+      const result = await parseData(value);
       if (result.error) {
         setError(result.error);
         setData([]);
@@ -209,7 +214,7 @@ export default function DataVisualizer() {
               <div className="text-sm text-red-500 mt-2">{error}</div>
             )}
             
-            <Button onClick={handleProcess} className="w-full gap-2" disabled={isLoading || !input.trim()}>
+            <Button onClick={() => handleProcess()} className="w-full gap-2" disabled={isLoading || !input.trim()}>
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
               Process Data
             </Button>

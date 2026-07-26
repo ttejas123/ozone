@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { initGA } from '@/lib/analytics';
+import { initGA, loadAds } from '@/lib/analytics';
 
 export const CookieConsent = () => {
   const [show, setShow] = useState(false);
@@ -12,6 +12,7 @@ export const CookieConsent = () => {
       setShow(true);
     } else if (consent === 'granted') {
       initGA();
+      loadAds();
     }
   }, []);
 
@@ -21,6 +22,7 @@ export const CookieConsent = () => {
     localStorage.setItem('cookie_consent', 'granted');
     setShow(false);
     initGA();
+    loadAds();
   };
 
   const handleDecline = () => {

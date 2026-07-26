@@ -73,31 +73,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
 
-        {/* Delay Analytics + Ads */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.addEventListener('load', function () {
-                var gaScript = document.createElement('script');
-                gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-0M9TCY2JGB';
-                gaScript.async = true;
-                document.head.appendChild(gaScript);
-
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                window.gtag = gtag;
-                gtag('js', new Date());
-                gtag('config', 'G-0M9TCY2JGB');
-
-                var adsScript = document.createElement('script');
-                adsScript.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9538506658422753';
-                adsScript.async = true;
-                adsScript.crossOrigin = 'anonymous';
-                document.head.appendChild(adsScript);
-              });
-            `,
-          }}
-        />
       </head>
       <body>
         <Suspense fallback={<div className="min-h-screen bg-white dark:bg-[#050505]" />}>

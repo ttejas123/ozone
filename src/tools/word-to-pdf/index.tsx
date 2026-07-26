@@ -3,8 +3,6 @@
 import { useState, useRef } from 'react';
 import { useFilePaste } from '@/hooks/useFilePaste';
 import { FileDown, Upload, FileText, Loader2, CheckCircle2 } from 'lucide-react';
-import * as mammoth from 'mammoth';
-import html2pdf from 'html2pdf.js';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { SEOHelmet } from '@/components/SEOHelmet';
@@ -56,8 +54,12 @@ export default function WordToPdf() {
     setSuccess(false);
 
     try {
+      const [{ default: html2pdf }, mammoth] = await Promise.all([
+        import('html2pdf.js'),
+        import('mammoth'),
+      ]);
       const arrayBuffer = await file.arrayBuffer();
-      
+
       // Convert Word to HTML
       const result = await mammoth.convertToHtml({ arrayBuffer });
       const html = result.value;
@@ -65,7 +67,7 @@ export default function WordToPdf() {
       // Create a hidden container for PDF generation
       const renderContainer = document.createElement('div');
       renderContainer.innerHTML = html;
-      
+
       // Basic styling for the PDF
       renderContainer.style.padding = '40px';
       renderContainer.style.fontFamily = 'Arial, sans-serif';
@@ -78,7 +80,28 @@ export default function WordToPdf() {
         margin:       10,
         filename:     file.name.replace(/\.[^/.]+$/, "") + '.pdf',
         image:        { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas:  { scale: 2 },
+        html2canvas: {
+          scale: 2,
+          // html2pdf.js always moves the source element into this page's own
+          // document.body to render it (see html2pdf.js/src/worker.js
+          // toContainer), so it inherits this app's global stylesheet. That
+          // stylesheet defines colors with the oklch() color function, which
+          // html2canvas can't parse — it throws on ANY element carrying one,
+          // not just ours. onclone runs on html2canvas's own DOM clone right
+          // before it renders, so strip every stylesheet from the clone
+          // entirely (leaving only inline styles, which we fully control
+          // below) rather than trying to override individual color properties.
+          onclone: (clonedDoc: Document) => {
+            clonedDoc.querySelectorAll('style, link[rel="stylesheet"]').forEach((el) => el.remove());
+            const style = clonedDoc.createElement('style');
+            style.textContent = `
+              * { box-shadow: none !important; background-image: none !important; }
+              body { background: #ffffff; }
+              a { color: #1a56db; }
+            `;
+            clonedDoc.head.appendChild(style);
+          },
+        },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
       };
 

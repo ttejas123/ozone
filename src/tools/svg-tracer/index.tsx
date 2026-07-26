@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useFilePaste } from '@/hooks/useFilePaste';
 import { Upload, Download, ScanLine, Trash2, Sliders } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
@@ -68,6 +68,19 @@ export default function SvgTracer() {
     setSvgOutput(null);
     setSvgDataUrl(null);
   }, []);
+
+  // Revoke the previous blob URL whenever it's replaced or the component unmounts.
+  useEffect(() => {
+    return () => {
+      if (imageUrl) URL.revokeObjectURL(imageUrl);
+    };
+  }, [imageUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (svgDataUrl) URL.revokeObjectURL(svgDataUrl);
+    };
+  }, [svgDataUrl]);
 
   useFilePaste((files) => {
     const file = files[0];

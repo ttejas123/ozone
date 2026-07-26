@@ -27,6 +27,7 @@ import { Textarea } from '../../components/ui/Input';
 import { parseData, exportData, detectFormat, type SupportedFormat } from './utils';
 import { useFilePaste } from '@/hooks/useFilePaste';
 import { useToolStore } from '../../store/toolStore';
+import { toast } from '../../store/toastStore';
 
 const FORMATS: { id: SupportedFormat; label: string; icon: any; color: string; bg: string; border: string }[] = [
   { id: 'json', label: 'JSON', icon: FileJson, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20' },
@@ -232,11 +233,15 @@ export default function DataConverter() {
     if (file) processFile(file);
   };
 
-  const copyToClipboard = () => {
+  const copyToClipboard = async () => {
     if (!parsedData.length) return;
-    navigator.clipboard.writeText(JSON.stringify(parsedData, null, 2));
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(parsedData, null, 2));
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch {
+      toast.error('Failed to copy');
+    }
   };
 
   return (
